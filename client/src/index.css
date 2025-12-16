@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100..900&display=swap');
+
+@import "tailwindcss";
+
+* {
+  font-family: 'Inter Tight', sans-serif;
+}
+
+
+@theme {
+  --color-primary: #00ccff;
+  --color-primary-dull: #0088cc;
+  --color-light: #F1F5F9;
+  --color-borderColor: #00ffcc;
+}
+
