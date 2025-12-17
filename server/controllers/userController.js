@@ -21,7 +21,7 @@ const generateToken = (userId) => {
 // ================================
 // 📝 Register User (sign up)
 // ================================
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res, next) => {
 
     try {
 
@@ -61,7 +61,7 @@ export const registerUser = async (req, res) => {
 
     } catch (error) {
         console.log(error.message) // Log technical error for debugging
-        res.json({success: false, message: "Something went wrong"}) // Generic error sent to client
+        next(error)
     }
 }
 
@@ -70,7 +70,7 @@ export const registerUser = async (req, res) => {
 // ================================
 // 🔑 Login User (sign in)
 // ================================
-export const loginUser = async (req, res) => {
+export const loginUser = async (req, res, next) => {
 
     try {
         const { email, password } = req.body // Extract login credentials
@@ -101,20 +101,20 @@ export const loginUser = async (req, res) => {
 
     } catch (error) {
         console.log(error) // Log full server-side error
-        res.json({success: false, message: "Something went wrong"}) // Client-friendly error message
+        next(error)
 
     }
 }
 
 // Get user data using Token (JWT)
 
-export const getUserData = async (req, res) => {
+export const getUserData = async (req, res, next) => {
     try {
         const {user} = req
         res.json({success: true, user})
     } catch (error) {
         console.log(error)
-        res.json({success: false, message: "Something went wrong"})
+        next(error)
     }
 }
 
@@ -122,13 +122,13 @@ export const getUserData = async (req, res) => {
 // ================================
 // 🚗 Public: récupérer toutes les voitures disponibles
 // ================================
-export const getAllCars = async (_req, res) => {
+export const getAllCars = async (_req, res, next) => {
     try {
         const cars = await Car.find({ isAvailable: { $ne: false } })
         res.json({ success: true, cars })
     } catch (error) {
         console.log(error)
-        res.json({ success: false, message: "Failed to fetch cars" })
+        next(error)
     }
 }
 

@@ -5,6 +5,7 @@ import connectDB from './configs/db.js'
 import userRouter from './routes/userRoutes.js'
 import ownerRouter from './routes/ownerRoutes.js';
 import bookingRouter from './routes/bookingRoutes.js'
+import { notFound, errorHandler } from './middleware/errorMiddleware.js'
 
 
 //Initialize Express App
@@ -26,6 +27,10 @@ app.get("/", (req, res) =>
 app.use("/api/user", userRouter)
 app.use("/api/owner", ownerRouter)
 app.use('/api/bookings', bookingRouter)
+
+// 404 + error handler (must be after routes)
+app.use(notFound)
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () =>

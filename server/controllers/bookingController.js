@@ -18,7 +18,7 @@ const checkAvailability = async (car, pickupDate, returnDate) => {
 // ---------------------------------------------
 // API pour vérifier la disponibilité des voitures
 // ---------------------------------------------
-export const checkCarAvailability = async (req, res) => {
+export const checkCarAvailability = async (req, res, next) => {
     try {
         const { pickupDate, returnDate, location } = req.body;
 
@@ -43,14 +43,14 @@ export const checkCarAvailability = async (req, res) => {
         res.json({ success: true, availableCars });
     } catch (error) {
         console.error(error.message);
-        res.status(500).json({ success: false, message: error.message });
+        next(error);
     }
 };
 
 // ---------------------------------------------
 // API pour créer une réservation
 // ---------------------------------------------
-export const createBooking = async (req, res) => {
+export const createBooking = async (req, res, next) => {
     try {
         const { _id: userId } = req.user; // user connecté
         const { car, pickupDate, returnDate } = req.body;
@@ -86,14 +86,14 @@ export const createBooking = async (req, res) => {
         res.json({ success: true, message: "Booking created successfully" });
     } catch (error) {
         console.error(error.message);
-        res.status(500).json({ success: false, message: error.message });
+        next(error);
     }
 };
 
 // ---------------------------------------------
 // API pour lister les réservations d'un utilisateur
 // ---------------------------------------------
-export const getUserBookings = async (req, res) => {
+export const getUserBookings = async (req, res, next) => {
     try {
         const { _id } = req.user;
         const bookings = await Booking.find({ user: _id
@@ -105,14 +105,14 @@ export const getUserBookings = async (req, res) => {
         res.json({ success: true, bookings });
     } catch (error) {
         console.error(error.message);
-        res.status(500).json({ success: false, message: error.message });
+        next(error);
     }
 };
 
 // ---------------------------------------------
 // API pour lister les réservations d'un propriétaire
 // ---------------------------------------------
-export const getOwnerBookings = async (req, res) => {
+export const getOwnerBookings = async (req, res, next) => {
     try {
         if (req.user.role !== 'owner') {
             return res.status(403).json({ success: false, message: "Unauthorized access" });
@@ -126,14 +126,14 @@ export const getOwnerBookings = async (req, res) => {
         res.json({ success: true, bookings });
     } catch (error) {
         console.error(error.message);
-        res.status(500).json({ success: false, message: error.message });
+        next(error);
     }
 };
 
 // ---------------------------------------------
 // API pour changer le statut d'une réservation
 // ---------------------------------------------
-export const changeBookingStatus = async (req, res) => {
+export const changeBookingStatus = async (req, res, next) => {
     try {
         const { _id } = req.user;
         const { bookingId, status } = req.body;
@@ -149,6 +149,6 @@ export const changeBookingStatus = async (req, res) => {
         res.json({ success: true, message: "Booking status changed successfully" });
     } catch (error) {
         console.error(error.message);
-        res.status(500).json({ success: false, message: error.message });
+        next(error);
     }
 };

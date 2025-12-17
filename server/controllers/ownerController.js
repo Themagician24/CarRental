@@ -6,7 +6,7 @@ import Booking from "../models/Booking.js";
 
 
   // Api to change user role
-  export const changeRoleToOwner = async (req, res) => {
+  export const changeRoleToOwner = async (req, res, next) => {
 
     try {
       const { _id } = req.user;
@@ -15,12 +15,12 @@ import Booking from "../models/Booking.js";
 
     } catch (error) {
       console.log(error.message);
-      res.json({ success: false, message: error.message });
+      next(error);
     }
   };
 
   // Api to list cars
-  export const addCar = async (req, res) => {
+  export const addCar = async (req, res, next) => {
 
     try {
      const { _id } = req.user;
@@ -72,7 +72,7 @@ import Booking from "../models/Booking.js";
 
     } catch (error) {
       console.log(error.message);
-      res.json({ success: false, message: error.message });
+      next(error);
     }
   };
 
@@ -81,7 +81,7 @@ import Booking from "../models/Booking.js";
 
 // Api to list owner Cars
 
-export const getOwnerCars = async (req, res) => {
+export const getOwnerCars = async (req, res, next) => {
 
 
   try {
@@ -91,14 +91,14 @@ export const getOwnerCars = async (req, res) => {
 
   } catch (error) {
     console.log(error.message);
-    res.json({ success: false, message: error.message });
+    next(error);
 
   }
 };
 
 // API to Toggle Car Availability
 
-export const toggleCarAvailability = async (req, res) => {
+export const toggleCarAvailability = async (req, res, next) => {
   try {
     const {_id} = req.user;
     const {carId} = req.body;
@@ -115,13 +115,13 @@ export const toggleCarAvailability = async (req, res) => {
     res.json({ success: true, message: "Car availability toggled successfully" });
   } catch (error) {
     console.log(error.message);
-    res.json({ success: false, message: error.message });
+    next(error);
   }
 }
 
 // API to delete a car
 
-export const deleteCar = async (req, res) => {
+export const deleteCar = async (req, res, next) => {
   try {
     const {_id} = req.user;
     const {carId} = req.body;
@@ -140,13 +140,13 @@ export const deleteCar = async (req, res) => {
     res.json({ success: true, message: "Car removed successfully" });
   } catch (error) {
     console.log(error.message);
-    res.json({ success: false, message: error.message });
+    next(error);
   }
 }
 
 // API to get Dashboard Data
 
-export const getDashboardData = async (req, res) => {
+export const getDashboardData = async (req, res, next) => {
   try {
     const {_id, role} = req.user;
     if(role !== "owner"){
@@ -177,13 +177,13 @@ export const getDashboardData = async (req, res) => {
 
   } catch (error) {
     console.log(error.message);
-    res.json({ success: false, message: error.message });
+    next(error);
   }
 }
 
 // API to update user image
 
-export const updateUserImage = async (req, res) => {
+export const updateUserImage = async (req, res, next) => {
   try {
     const {_id} = req.user;
     const imageFile = req.file;
@@ -218,7 +218,7 @@ export const updateUserImage = async (req, res) => {
 
   } catch (error) {
     console.log(error.message);
-    res.json({ success: false, message: error.message });
+    next(error);
 
   }
 }
