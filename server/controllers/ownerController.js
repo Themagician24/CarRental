@@ -1,8 +1,8 @@
-  import imageKit from "../configs/imageKit.js";
-import User from "../models/User.js";
-import Car from "../models/Car.js";
-import fs from "fs";
+  import fs from "fs";
+import imageKit from "../configs/imageKit.js";
 import Booking from "../models/Booking.js";
+import Car from "../models/Car.js";
+import User from "../models/User.js";
 
 
   // Api to change user role

@@ -1,14 +1,15 @@
 import express from "express";
-import { protect } from "../middleware/auth.js";
-import { addCar,
-     changeRoleToOwner,
-      deleteCar,
-       getDashboardData,
-        getOwnerCars,
-        toggleCarAvailability,
-        updateUserImage
-     } from "../controllers/ownerController.js";
+import {
+  addCar,
+  changeRoleToOwner,
+  deleteCar,
+  getDashboardData,
+  getOwnerCars,
+  toggleCarAvailability,
+  updateUserImage
+} from "../controllers/ownerController.js";
 import asyncHandler from '../middleware/asyncHandler.js';
+import { protect } from "../middleware/auth.js";
 import upload from "../middleware/upload.js";
 
 

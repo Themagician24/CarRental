@@ -1,7 +1,7 @@
-import User from "../models/User.js"
-import Car from "../models/Car.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
+import Car from "../models/Car.js"
+import User from "../models/User.js"
 
 
 // ================================

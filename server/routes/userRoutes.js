@@ -1,4 +1,4 @@
-import express from 'express'
+import express from 'express';
 import { getAllCars, getUserData, loginUser, registerUser } from '../controllers/userController.js';
 import asyncHandler from '../middleware/asyncHandler.js';
 import { protect } from '../middleware/auth.js';

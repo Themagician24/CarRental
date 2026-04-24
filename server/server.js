@@ -1,11 +1,11 @@
-import express from 'express'
-import "dotenv/config"
 import cors from 'cors'
+import "dotenv/config"
+import express from 'express'
 import connectDB from './configs/db.js'
-import userRouter from './routes/userRoutes.js'
-import ownerRouter from './routes/ownerRoutes.js';
+import { errorHandler, notFound } from './middleware/errorMiddleware.js'
 import bookingRouter from './routes/bookingRoutes.js'
-import { notFound, errorHandler } from './middleware/errorMiddleware.js'
+import ownerRouter from './routes/ownerRoutes.js'
+import userRouter from './routes/userRoutes.js'
 
 
 //Initialize Express App

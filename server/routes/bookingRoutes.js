@@ -1,7 +1,7 @@
 import express from "express";
 import { changeBookingStatus, checkCarAvailability, createBooking, getOwnerBookings, getUserBookings } from "../controllers/bookingController.js";
-import { protect } from "../middleware/auth.js";
 import asyncHandler from '../middleware/asyncHandler.js';
+import { protect } from "../middleware/auth.js";
 
 
 
