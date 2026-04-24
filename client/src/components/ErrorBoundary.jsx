@@ -1,7 +1,6 @@
-import React from 'react'
-import { toast } from 'react-hot-toast'
+import { Component } from 'react'
 
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends Component {
   constructor(props) {
     super(props)
     this.state = { hasError: false, error: null }
@@ -12,27 +11,24 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    // Log and surface error to user via toast
-    console.error('Uncaught error:', error, info)
-    toast.error(error?.message || 'Une erreur est survenue')
+    console.error('ErrorBoundary caught:', error, info)
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center p-6">
-          <div className="bg-dark-panel p-8 rounded-xl max-w-lg w-full text-center">
-            <h2 className="text-2xl font-bold text-gold mb-4">Quelque chose s'est mal passé</h2>
-            <p className="mb-6 text-muted">Nous avons automatiquement envoyé le rapport d'erreur.</p>
-            <div className="flex justify-center gap-4">
-              <button onClick={() => window.location.reload()} className="btn btn-primary">Recharger</button>
-              <button onClick={() => this.setState({ hasError: false, error: null })} className="btn btn-ghost">Fermer</button>
-            </div>
-          </div>
+        <div className="flex flex-col items-center justify-center min-h-screen text-center px-4">
+          <h1 className="text-2xl font-semibold text-gray-800 mb-2">Something went wrong</h1>
+          <p className="text-gray-500 mb-6">{this.state.error?.message || 'An unexpected error occurred.'}</p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="px-5 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition"
+          >
+            Try again
+          </button>
         </div>
       )
     }
-
     return this.props.children
   }
 }

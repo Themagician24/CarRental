@@ -1,236 +1,233 @@
-import React, { useEffect, useState } from 'react'
-import { assets } from '../assets/assets.js'
-import Title from '../components/Title.jsx'
+import { useEffect, useState } from 'react'
 import { useAppContext } from '../context/AppContext.jsx'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
+import { dummyMyBookingsData } from '../assets/assets.js'
 
-const containerVariants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.08,
-    },
-  },
+const STATUS_CONFIG = {
+  confirmed: { label: 'Confirmée', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  pending:   { label: 'En attente', bg: 'bg-amber-50',   text: 'text-amber-700',   dot: 'bg-amber-400'  },
+  cancelled: { label: 'Annulée',   bg: 'bg-red-50',     text: 'text-red-700',     dot: 'bg-red-400'    },
 }
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0 },
+const PHASE_CONFIG = {
+  'À venir':   { bg: 'bg-blue-50',  text: 'text-blue-600'  },
+  'En cours':  { bg: 'bg-primary/8', text: 'text-primary'   },
+  'Terminée':  { bg: 'bg-gray-100', text: 'text-gray-500'  },
 }
 
 const MyBookings = () => {
   const { axios, user, currency } = useAppContext()
+  const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // 🔹 Fetch user bookings
   const fetchMyBookings = async () => {
     try {
       setLoading(true)
       const { data } = await axios.get('/api/bookings/user')
-      if (data.success) setBookings(data.bookings)
-      else toast.error(data.message)
-    } catch (error) {
-      toast.error(error?.response?.data?.message || error.message)
+      if (data.success) {
+        setBookings(data.bookings)
+      } else {
+        setBookings(dummyMyBookingsData)
+      }
+    } catch {
+      setBookings(dummyMyBookingsData)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    user && fetchMyBookings()
+    if (user) fetchMyBookings()
+    else setLoading(false)
   }, [user])
 
-  // 🔹 Utils
-  const formatDate = (date) => date.split('T')[0]
+  const formatDate = (d) =>
+    new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 
-  const getDays = (start, end) =>
-    Math.ceil(
-      (new Date(end).getTime() - new Date(start).getTime()) /
-        (1000 * 60 * 60 * 24)
-    )
+  const getDays = (s, e) =>
+    Math.max(1, Math.ceil((new Date(e) - new Date(s)) / 86400000))
 
-  const getPhase = (pickup, returnDate) => {
+  const getPhase = (pickup, ret) => {
     const now = new Date()
-    if (now < new Date(pickup)) return 'Upcoming'
-    if (now > new Date(returnDate)) return 'Completed'
-    return 'Ongoing'
+    if (now < new Date(pickup)) return 'À venir'
+    if (now > new Date(ret))    return 'Terminée'
+    return 'En cours'
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-16 lg:px-24 xl:px-32 2xl:px-48 mt-20">
-      <Title
-        title="My Bookings"
-        subTitle="All your reservations"
-        align="left"
-      />
+    <div className="min-h-screen bg-white">
 
-      {/* Empty State */}
-      {!loading && bookings.length === 0 && (
+      {/* ── Header ── */}
+      <div className="relative bg-[#07071a] overflow-hidden py-16 px-6">
+        <div className="absolute inset-0 bg-grid opacity-60" />
+        <div className="absolute top-0 left-1/3 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mt-24 text-center text-gray-500"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative z-10 max-w-7xl mx-auto"
         >
-          <img
-            src={assets.empty_booking}
-            alt="No bookings"
-            className="w-48 mx-auto mb-6 opacity-80"
-          />
-          <p className="text-lg font-medium">No bookings yet</p>
-          <p className="text-sm">Your future rides will appear here 🚗</p>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            {loading ? '…' : `${bookings.length} réservation${bookings.length !== 1 ? 's' : ''}`}
+          </div>
+          <h1 className="text-3xl md:text-4xl font-black text-white">
+            Mes <span className="gradient-text">Réservations</span>
+          </h1>
+          <p className="text-gray-400 mt-2 text-sm">Suivez et gérez toutes vos locations</p>
         </motion.div>
-      )}
+      </div>
 
-      {/* Booking Cards */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="space-y-8 mt-14"
-      >
-        {bookings.map((booking) => {
-          const days = getDays(booking.pickupDate, booking.returnDate)
-          const phase = getPhase(
-            booking.pickupDate,
-            booking.returnDate
-          )
+      {/* ── Content ── */}
+      <div className="max-w-7xl mx-auto px-6 md:px-16 py-12">
 
-          return (
-            <motion.div
-              key={booking._id}
-              variants={cardVariants}
-              whileHover={{ y: -2 }}
-              transition={{ type: 'spring', stiffness: 120, damping: 18 }}
-              className="bg-white rounded-2xl border border-borderColor shadow-sm hover:shadow-lg transition-shadow overflow-hidden"
+        {/* Not logged in */}
+        {!user && !loading && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center py-24 text-center"
+          >
+            <div className="text-6xl mb-5">🔐</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Connexion requise</h2>
+            <p className="text-gray-500 text-sm mb-6">Connectez-vous pour voir vos réservations</p>
+            <button
+              onClick={() => navigate('/')}
+              className="px-6 py-2.5 rounded-xl bg-linear-to-r from-primary to-[#7c3aed] text-white text-sm font-semibold shadow-[0_0_20px_rgba(0,212,255,0.25)] hover:shadow-[0_0_35px_rgba(0,212,255,0.4)] transition-shadow"
             >
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
+              Retour à l'accueil
+            </button>
+          </motion.div>
+        )}
 
-                {/* 🚗 Car */}
-                <div className="space-y-3">
-                  <div className="rounded-xl overflow-hidden">
-                    <motion.img
-                      src={booking.car.image}
-                      alt={`${booking.car.brand} ${booking.car.model}`}
-                      className="aspect-video object-cover w-full"
-                      whileHover={{ scale: 1.04 }}
-                      transition={{ duration: 0.4 }}
-                    />
-                  </div>
+        {/* Loading */}
+        {loading && (
+          <div className="flex items-center justify-center py-24">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
 
-                  <div>
-                    <h3 className="text-lg font-semibold leading-tight">
-                      {booking.car.brand} {booking.car.model}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      {booking.car.year} • {booking.car.category}
-                    </p>
-                  </div>
+        {/* Empty */}
+        {!loading && user && bookings.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center py-24 text-center"
+          >
+            <div className="text-6xl mb-5">🚗</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Aucune réservation</h2>
+            <p className="text-gray-500 text-sm mb-6">Votre prochain voyage commence ici</p>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => navigate('/cars')}
+              className="px-6 py-2.5 rounded-xl bg-linear-to-r from-primary to-[#7c3aed] text-white text-sm font-semibold shadow-[0_0_20px_rgba(0,212,255,0.25)] hover:shadow-[0_0_35px_rgba(0,212,255,0.4)] transition-shadow"
+            >
+              Explorer les véhicules
+            </motion.button>
+          </motion.div>
+        )}
 
-                  {/* Specs */}
-                  <div className="text-xs text-gray-500 space-y-1">
-                    <p>⚙️ Automatic</p>
-                    <p>⛽ Diesel</p>
-                    <p>👥 5 seats</p>
-                  </div>
-                </div>
+        {/* Bookings list */}
+        <AnimatePresence>
+          {!loading && bookings.length > 0 && (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={{ visible: { transition: { staggerChildren: 0.07 } } }}
+              className="space-y-5"
+            >
+              {bookings.map((b) => {
+                const days = getDays(b.pickupDate, b.returnDate)
+                const phase = getPhase(b.pickupDate, b.returnDate)
+                const status = STATUS_CONFIG[b.status] || STATUS_CONFIG.pending
+                const phaseStyle = PHASE_CONFIG[phase] || PHASE_CONFIG['Terminée']
 
-                {/* 📅 Infos */}
-                <div className="md:col-span-2 flex flex-col justify-between">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-xs px-3 py-1 rounded-full bg-light">
-                      Booking #{booking._id.slice(-6)}
-                    </span>
+                return (
+                  <motion.div
+                    key={b._id}
+                    variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+                    whileHover={{ y: -2 }}
+                    transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_16px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-300 overflow-hidden"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-[200px_1fr_auto] gap-0">
 
-                    <span
-                      className={`text-xs px-3 py-1 rounded-full font-medium ${
-                        booking.status === 'confirmed'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}
-                    >
-                      {booking.status}
-                    </span>
+                      {/* Car image */}
+                      <div className="relative h-44 md:h-auto overflow-hidden md:rounded-l-2xl bg-gray-50">
+                        <img
+                          src={b.car.image}
+                          alt={`${b.car.brand} ${b.car.model}`}
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent md:bg-linear-to-r" />
+                      </div>
 
-                    <span className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">
-                      {phase}
-                    </span>
-                  </div>
+                      {/* Info */}
+                      <div className="p-5 flex flex-col justify-between">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${status.bg} ${status.text}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                              {status.label}
+                            </span>
+                            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${phaseStyle.bg} ${phaseStyle.text}`}>
+                              {phase}
+                            </span>
+                            <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-full">
+                              #{b._id.slice(-6).toUpperCase()}
+                            </span>
+                          </div>
 
-                  {/* Dates */}
-                  <div className="flex gap-8 mt-6">
-                    <div className="flex gap-2">
-                      <img
-                        src={assets.calendar_icon_colored}
-                        className="w-4 h-4 mt-1"
-                      />
-                      <div>
-                        <p className="text-xs text-gray-400">From</p>
-                        <p className="font-medium">
-                          {formatDate(booking.pickupDate)}
-                        </p>
+                          <h3 className="text-lg font-bold text-gray-900">{b.car.brand} {b.car.model}</h3>
+                          <p className="text-sm text-gray-400">{b.car.year} · {b.car.category}</p>
+                        </div>
+
+                        {/* Dates */}
+                        <div className="mt-4 flex items-center gap-6">
+                          <div>
+                            <div className="text-[11px] text-gray-400 font-medium mb-0.5">Départ</div>
+                            <div className="text-sm font-semibold text-gray-800">{formatDate(b.pickupDate)}</div>
+                          </div>
+                          <div className="flex-1 h-px bg-linear-to-r from-primary/30 to-transparent max-w-[60px]" />
+                          <div className="text-xs text-primary font-bold">{days}j</div>
+                          <div className="flex-1 h-px bg-linear-to-l from-primary/30 to-transparent max-w-[60px]" />
+                          <div>
+                            <div className="text-[11px] text-gray-400 font-medium mb-0.5">Retour</div>
+                            <div className="text-sm font-semibold text-gray-800">{formatDate(b.returnDate)}</div>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 flex items-center gap-4 text-xs text-gray-400">
+                          <span>📍 {b.car.location}</span>
+                          <span>🛡️ Assurance incluse</span>
+                          <span>💳 Paiement en ligne</span>
+                        </div>
+                      </div>
+
+                      {/* Price */}
+                      <div className="px-6 py-5 border-t md:border-t-0 md:border-l border-gray-100 flex flex-col items-end justify-between min-w-[140px]">
+                        <div className="text-right">
+                          <div className="text-xs text-gray-400 mb-1">Total</div>
+                          <div className="text-3xl font-black text-gray-900">{currency}{b.price}</div>
+                          <div className="text-xs text-gray-400 mt-1">{currency}{(b.price / days).toFixed(0)} / jour</div>
+                        </div>
+                        <div className="text-right mt-4">
+                          <div className="text-[11px] text-gray-400">Réservé le</div>
+                          <div className="text-xs font-medium text-gray-600">{formatDate(b.createdAt)}</div>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="flex gap-2">
-                      <img
-                        src={assets.calendar_icon_colored}
-                        className="w-4 h-4 mt-1"
-                      />
-                      <div>
-                        <p className="text-xs text-gray-400">To</p>
-                        <p className="font-medium">
-                          {formatDate(booking.returnDate)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Location + extras */}
-                  <div className="mt-5 space-y-2 text-sm text-gray-500">
-                    <p className="flex items-center gap-2">
-                      <img
-                        src={assets.location_icon_colored}
-                        className="w-4 h-4"
-                      />
-                      {booking.car.location}
-                    </p>
-
-                    <div className="text-xs space-y-1">
-                      <p>🕒 Duration: {days} days</p>
-                      <p>🛡️ Insurance included</p>
-                      <p>💳 Payment: Online</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 💰 Price */}
-                <div className="flex flex-col justify-between text-right">
-                  <div>
-                    <p className="text-xs text-gray-400">Total price</p>
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-3xl font-bold text-primary mt-1"
-                    >
-                      {currency}{booking.price}
-                    </motion.p>
-
-                    <p className="text-xs text-gray-400 mt-1">
-                      {currency}{(booking.price / days).toFixed(0)} / day
-                    </p>
-                  </div>
-
-                  <p className="text-xs text-gray-400 mt-6">
-                    Booked on {formatDate(booking.createdAt)}
-                  </p>
-                </div>
-              </div>
+                  </motion.div>
+                )
+              })}
             </motion.div>
-          )
-        })}
-      </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }

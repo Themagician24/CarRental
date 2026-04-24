@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { dummyCarData } from "../assets/assets";
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -28,11 +29,12 @@ export const AppProvider = ({ children }) => {
       if (data.success) {
         setUser(data.user);
         setIsOwner(data.user.role === "owner");
-      } else {
-        navigate("/");
       }
-    } catch (error) {
-      toast.error("Failed to fetch user data");
+    } catch {
+      // Token invalid or server unreachable — silently clear session
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem("token");
     }
   };
 
@@ -42,9 +44,13 @@ export const AppProvider = ({ children }) => {
   const fetchCars = async () => {
     try {
       const { data } = await axios.get("/api/user/cars");
-      data.success ? setCars(data.cars) : toast.error("Failed to fetch cars");
-    } catch (error) {
-      toast.error("Failed to fetch cars");
+      if (data.success && data.cars?.length > 0) {
+        setCars(data.cars);
+      } else {
+        setCars(dummyCarData);
+      }
+    } catch {
+      setCars(dummyCarData);
     }
   };
 

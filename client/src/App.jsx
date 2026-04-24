@@ -27,34 +27,26 @@ export const App = () => {
   return (
     <>
       <Toaster position='top-center' />
-    {showLogin && <Login />}
+      {showLogin && <Login />}
+      {!isOwnerPath && <Navbar />}
 
-     {!isOwnerPath &&  <Navbar />}
+      <main className={!isOwnerPath ? 'pt-[72px]' : ''}>
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='/car-details/:id' element={<CarDetails />} />
+          <Route path='/cars' element={<Cars />} />
+          <Route path='/my-bookings' element={<MyBookings />} />
 
-    <Routes>
-      <Route path = '/' element={<Home/>} />
-      <Route path = '/car-details/:id' element={<CarDetails/>} />
-      <Route path = '/cars' element={<Cars/>} />
-      <Route path = '/my-bookings' element={<MyBookings/>} />
+          <Route path='/owner/' element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path='add-car' element={<AddCar />} />
+            <Route path='manage-cars' element={<ManageCars />} />
+            <Route path='manage-bookings' element={<ManageBookings />} />
+          </Route>
+        </Routes>
+      </main>
 
-      <Route path = '/owner/' element={<Layout />}>
-
-        <Route index element={<Dashboard/>} />
-        <Route path = 'add-car' element = {<AddCar />} />
-        <Route path = 'manage-cars' element={<ManageCars/>} />
-        <Route path = 'manage-bookings' element={<ManageBookings/>} />
-
-      </Route>
-
-
-    </Routes>
-
-
-      {!isOwnerPath &&
-    <Footer />
-      }
-
-
+      {!isOwnerPath && <Footer />}
     </>
   )
 }

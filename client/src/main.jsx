@@ -1,13 +1,13 @@
 
+import { MotionConfig } from 'motion/react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
-import { BrowserRouter } from 'react-router-dom'
-import { AppProvider } from './context/AppContext.jsx'
-import {MotionConfig} from 'motion/react'
-import ErrorBoundary from './components/ErrorBoundary.jsx'
-import './utils/axiosSetup'
 import { toast } from 'react-hot-toast'
+import { BrowserRouter } from 'react-router-dom'
+import App from './App.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
+import { AppProvider } from './context/AppContext.jsx'
+import './index.css'
+import './utils/axiosSetup'
 
 // Global handlers for uncaught errors and promise rejections
 window.onerror = function (message, source, lineno, colno, error) {

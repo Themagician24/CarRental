@@ -1,199 +1,173 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { assets, cityList } from '../assets/assets'
 import { useAppContext } from '../context/AppContext'
 import DatePicker from 'react-datepicker'
-import "react-datepicker/dist/react-datepicker.css"
-import { motion } from 'framer-motion'
+import 'react-datepicker/dist/react-datepicker.css'
+import { motion, AnimatePresence } from 'motion/react'
 
 const Hero = () => {
   const [pickupLocation, setPickupLocation] = useState('')
   const [startDate, setStartDate] = useState(null)
   const [endDate, setEndDate] = useState(null)
   const [showCalendar, setShowCalendar] = useState(false)
-
   const { pickupDate, setPickupDate, returnDate, setReturnDate, navigate } = useAppContext()
 
-  // Synchroniser avec le contexte existant
-  useEffect(() => {
-    if (pickupDate) {
-      setStartDate(new Date(pickupDate))
-    }
-  }, [pickupDate])
-
-  useEffect(() => {
-    if (returnDate) {
-      setEndDate(new Date(returnDate))
-    }
-  }, [returnDate])
+  useEffect(() => { if (pickupDate) setStartDate(new Date(pickupDate)) }, [pickupDate])
+  useEffect(() => { if (returnDate) setEndDate(new Date(returnDate)) }, [returnDate])
 
   const handleSearch = (e) => {
     e.preventDefault()
     if (!pickupLocation || !startDate || !endDate) {
-      alert('Please fill all fields')
+      alert('Veuillez remplir tous les champs')
       return
     }
-
-    const formatDate = (date) => {
-      return date.toISOString().split('T')[0]
-    }
-
-    navigate(`/cars?pickupLocation=${pickupLocation}&pickupDate=${formatDate(startDate)}&returnDate=${formatDate(endDate)}`)
-  }
-
-  const calculateDays = () => {
-    if (startDate && endDate) {
-      const diffTime = Math.abs(endDate - startDate)
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      return diffDays
-    }
-    return 0
+    const fmt = (d) => d.toISOString().split('T')[0]
+    navigate(`/cars?pickupLocation=${pickupLocation}&pickupDate=${fmt(startDate)}&returnDate=${fmt(endDate)}`)
   }
 
   const handleDateChange = (dates) => {
     const [start, end] = dates
     setStartDate(start)
     setEndDate(end)
-
-    if (start) {
-      setPickupDate(start.toISOString().split('T')[0])
-    }
-    if (end) {
-      setReturnDate(end.toISOString().split('T')[0])
-    }
+    if (start) setPickupDate(start.toISOString().split('T')[0])
+    if (end) setReturnDate(end.toISOString().split('T')[0])
   }
 
-  const getMinReturnDate = () => {
-    return startDate ? new Date(startDate.getTime() + 24 * 60 * 60 * 1000) : new Date()
+  const calculateDays = () => {
+    if (!startDate || !endDate) return 0
+    return Math.ceil(Math.abs(endDate - startDate) / (1000 * 60 * 60 * 24))
   }
+
+  const quickOptions = [
+    { label: 'Aujourd\'hui', days: 0 },
+    { label: 'Demain', days: 1 },
+    { label: 'Week-end', days: getDaysUntilWeekend() },
+    { label: 'Semaine prochaine', days: 7 },
+  ]
 
   return (
-    <div className='relative h-screen flex flex-col items-center justify-center gap-8 md:gap-12 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-center overflow-hidden'>
+    <section className="relative min-h-[calc(100vh-72px)] flex flex-col items-center justify-center overflow-hidden bg-[#07071a] text-center">
 
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-2000"></div>
+      {/* ── Animated grid background ── */}
+      <div className="absolute inset-0 bg-grid opacity-100" />
+
+      {/* ── Gradient orbs ── */}
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/15 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#7c3aed]/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+
+      {/* ── Scan line ── */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent animate-[scan-y_6s_linear_infinite]" style={{ top: 0 }} />
       </div>
 
-      <div className='relative z-10 max-w-5xl mx-auto px-4'>
-        {/* Header - Réduit */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-12 flex flex-col items-center gap-10">
+
+        {/* ── Badge ── */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className='mb-8'
+          transition={{ duration: 0.5 }}
+          className="flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-primary/20 text-xs font-semibold text-primary"
         >
-          <h1 className='text-3xl md:text-5xl font-bold text-white mb-3'>
-            Premium <span className='text-blue-400'>Luxury Cars</span> on Rent
+          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          Plateforme premium de location — 500+ véhicules disponibles
+        </motion.div>
+
+        {/* ── Headline ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="space-y-3"
+        >
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-tight tracking-tight">
+            Conduisez le{' '}
+            <span className="gradient-text">Futur</span>
+            <br />
+            <span className="text-white/90">dès Aujourd'hui</span>
           </h1>
-          <p className='text-base md:text-lg text-gray-300 max-w-xl mx-auto'>
-            Experience ultimate comfort and style with our exclusive collection
+          <p className="text-gray-400 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+            Voitures premium, SUV de luxe et véhicules électriques — réservez en 30 secondes.
           </p>
         </motion.div>
 
-        {/* Search Form - Taille réduite */}
+        {/* ── Search form ── */}
         <motion.form
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           onSubmit={handleSearch}
-          className='bg-white/10 backdrop-blur-lg rounded-xl md:rounded-2xl p-5 md:p-6 w-full max-w-4xl mx-auto border border-white/20 shadow-xl'
+          className="w-full max-w-4xl glass-dark rounded-2xl p-6 shadow-2xl"
         >
-          <div className='flex flex-col lg:flex-row items-stretch gap-4 md:gap-5'>
+          <div className="flex flex-col lg:flex-row items-stretch gap-4">
 
-            {/* Location Selector - Réduit */}
-            <div className='flex-1'>
-              <div className="relative group">
-                <label className='block text-left text-white text-xs font-medium mb-1.5 ml-1'>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                    </svg>
-                    Pickup Location
-                  </span>
-                </label>
-                <div className="relative">
-                  <select
-                    required
-                    value={pickupLocation}
-                    onChange={(e) => setPickupLocation(e.target.value)}
-                    className='w-full px-3.5 py-3 text-sm bg-white/5 border-2 border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all cursor-pointer appearance-none'
-                  >
-                    <option value="" className="bg-gray-800 text-white">Select a city</option>
-                    {cityList.map((city) => (
-                      <option key={city} value={city} className="bg-gray-800 text-white">
-                        {city}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+            {/* Location */}
+            <div className="flex-1">
+              <label className="flex items-center gap-1.5 text-white/60 text-xs font-medium mb-2">
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                </svg>
+                Lieu de prise en charge
+              </label>
+              <div className="relative">
+                <select
+                  required
+                  value={pickupLocation}
+                  onChange={(e) => setPickupLocation(e.target.value)}
+                  className="w-full px-4 py-3 text-sm rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all cursor-pointer appearance-none"
+                >
+                  <option value="" className="bg-[#0d0d2b] text-white">Sélectionner une ville</option>
+                  {cityList.map((city) => (
+                    <option key={city} value={city} className="bg-[#0d0d2b] text-white">{city}</option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/40">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
-                {pickupLocation && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className='text-xs text-blue-300 mt-1.5 ml-1 flex items-center gap-1'
-                  >
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    {pickupLocation}
-                  </motion.p>
-                )}
               </div>
             </div>
 
-            {/* Date Range Picker - Réduit */}
-            <div className='flex-1 relative'>
-              <label className='block text-left text-white text-xs font-medium mb-1.5 ml-1'>
-                <span className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                  </svg>
-                  Rental Period
-                </span>
+            {/* Date range */}
+            <div className="flex-1 relative">
+              <label className="flex items-center gap-1.5 text-white/60 text-xs font-medium mb-2">
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                Période de location
               </label>
-
-              <div className="relative">
-                <div
-                  onClick={() => setShowCalendar(!showCalendar)}
-                  className="w-full px-3.5 py-3 text-sm bg-white/5 border-2 border-white/20 rounded-lg text-white cursor-pointer hover:border-blue-500/50 transition-all flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-left">
-                      <div className="text-xs text-gray-400">From</div>
-                      <div className="font-medium">
-                        {startDate ? startDate.toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric'
-                        }) : 'Select date'}
-                      </div>
-                    </div>
-                    <div className="text-gray-400 text-sm">→</div>
-                    <div className="text-left">
-                      <div className="text-xs text-gray-400">To</div>
-                      <div className="font-medium">
-                        {endDate ? endDate.toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric'
-                        }) : 'Select date'}
-                      </div>
-                    </div>
+              <div
+                onClick={() => setShowCalendar(!showCalendar)}
+                className="w-full px-4 py-3 text-sm rounded-xl bg-white/5 border border-white/10 text-white cursor-pointer hover:border-primary/50 transition-all flex items-center justify-between"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="text-left">
+                    <div className="text-white/40 text-xs">Départ</div>
+                    <div className="font-medium">{startDate ? startDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '—'}</div>
                   </div>
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+                  <div className="text-primary/60">→</div>
+                  <div className="text-left">
+                    <div className="text-white/40 text-xs">Retour</div>
+                    <div className="font-medium">{endDate ? endDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '—'}</div>
+                  </div>
                 </div>
+                {calculateDays() > 0 && (
+                  <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-semibold">
+                    {calculateDays()}j
+                  </span>
+                )}
+              </div>
 
+              <AnimatePresence>
                 {showCalendar && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-full mt-1.5 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3"
+                    initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full mt-2 z-50 bg-[#0d0d2b] border border-[#00d4ff20] rounded-2xl shadow-2xl p-3"
                   >
                     <DatePicker
                       selected={startDate}
@@ -204,147 +178,116 @@ const Hero = () => {
                       inline
                       minDate={new Date()}
                       monthsShown={2}
-                      calendarClassName="bg-gray-900 text-white"
-                      dayClassName={() => "text-white hover:bg-blue-600 rounded"}
                     />
-                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-700">
-                      <div className="text-xs text-gray-400">
-                        {calculateDays() > 0 && `${calculateDays()} days`}
-                      </div>
+                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-white/10">
+                      <span className="text-xs text-gray-400">
+                        {calculateDays() > 0 ? `${calculateDays()} jour${calculateDays() > 1 ? 's' : ''}` : 'Sélectionnez les dates'}
+                      </span>
                       <button
                         type="button"
                         onClick={() => setShowCalendar(false)}
-                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                        className="px-4 py-1.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dull transition-colors"
                       >
-                        Apply
+                        Confirmer
                       </button>
                     </div>
                   </motion.div>
                 )}
-              </div>
-
-              {/* Date Summary - Réduit */}
-              {(startDate || endDate) && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-2 flex items-center justify-between text-xs"
-                >
-                  <div className="flex items-center gap-3">
-                    {startDate && (
-                      <span className="text-green-400 flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        {startDate.toLocaleDateString()}
-                      </span>
-                    )}
-                    {endDate && (
-                      <span className="text-blue-400 flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        {endDate.toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                  {calculateDays() > 0 && (
-                    <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full text-xs">
-                      {calculateDays()} day{calculateDays() > 1 ? 's' : ''}
-                    </span>
-                  )}
-                </motion.div>
-              )}
+              </AnimatePresence>
             </div>
 
-            {/* Search Button - Réduit */}
-            <div className='flex items-end'>
+            {/* Submit */}
+            <div className="flex items-end">
               <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                type='submit'
-                className='w-full lg:w-auto px-6 py-3 text-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-bold shadow-md shadow-blue-500/30 flex items-center justify-center gap-2 transition-all group'
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                type="submit"
+                className="relative w-full lg:w-auto px-8 py-3 text-sm font-bold text-white rounded-xl overflow-hidden group"
               >
-                <svg className="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span>Find Cars</span>
+                <span className="absolute inset-0 bg-linear-to-r from-primary to-[#7c3aed]" />
+                <span className="absolute inset-0 bg-linear-to-r from-primary to-[#7c3aed] blur-lg opacity-50 group-hover:opacity-80 transition-opacity" />
+                <span className="relative z-10 flex items-center gap-2">
+                  <svg className="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Rechercher
+                </span>
               </motion.button>
             </div>
           </div>
 
-          {/* Quick Options - Réduit */}
-          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { label: 'Today', days: 0 },
-              { label: 'Tomorrow', days: 1 },
-              { label: 'Weekend', days: getDaysUntilWeekend() },
-              { label: 'Next Week', days: 7 }
-            ].map((option) => (
+          {/* Quick options */}
+          <div className="mt-4 flex flex-wrap gap-2 justify-center">
+            {quickOptions.map((opt) => (
               <button
-                key={option.label}
+                key={opt.label}
                 type="button"
                 onClick={() => {
                   const start = new Date()
-                  start.setDate(start.getDate() + option.days)
+                  start.setDate(start.getDate() + opt.days)
                   const end = new Date(start)
                   end.setDate(end.getDate() + 3)
                   handleDateChange([start, end])
                 }}
-                className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white text-xs transition-all hover:border-blue-500/50"
+                className="px-3 py-1.5 text-xs rounded-lg bg-white/5 border border-white/10 text-white/60 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all"
               >
-                {option.label}
+                {opt.label}
               </button>
             ))}
           </div>
         </motion.form>
 
-        {/* Car Image - Réduite */}
+        {/* ── Floating car with 3D effect ── */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="relative mt-8"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="relative w-full max-w-2xl"
         >
+          <div className="absolute inset-0 bg-linear-to-r from-primary/10 via-transparent to-[#7c3aed]/10 blur-2xl rounded-full" />
           <img
             src={assets.main_car}
-            alt='Luxury Car'
-            className='max-h-72 md:max-h-80 w-auto mx-auto drop-shadow-xl'
+            alt="Voiture premium"
+            className="relative z-10 w-full max-h-64 object-contain drop-shadow-2xl animate-float-3d"
+            style={{ filter: 'drop-shadow(0 20px 40px rgba(0, 212, 255, 0.15))' }}
           />
-
-          {/* Floating Info Cards - Réduites */}
-          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-            {[
-              { icon: '🚗', text: 'Premium' },
-              { icon: '⭐', text: '5-Star' },
-              { icon: '🛡️', text: 'Insured' },
-              { icon: '💰', text: 'Best Price' }
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ y: 15, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.6 + index * 0.1 }}
-                className="bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-1.5 rounded-md flex items-center gap-1.5 text-white text-xs"
-              >
-                <span className="text-xs">{item.icon}</span>
-                <span>{item.text}</span>
-              </motion.div>
-            ))}
-          </div>
+          {/* Glow under car */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-8 bg-primary/20 blur-2xl rounded-full" />
         </motion.div>
+
+        {/* ── Stats row ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="flex flex-wrap justify-center gap-6 md:gap-10"
+        >
+          {[
+            { value: '500+', label: 'Véhicules' },
+            { value: '4.9★', label: 'Note moyenne' },
+            { value: '30', label: 'Villes' },
+            { value: '10K+', label: 'Clients satisfaits' },
+          ].map((stat) => (
+            <div key={stat.label} className="text-center">
+              <div className="text-xl font-black text-white neon-text">{stat.value}</div>
+              <div className="text-xs text-gray-500 mt-0.5">{stat.label}</div>
+            </div>
+          ))}
+        </motion.div>
+
       </div>
-    </div>
+
+      {/* ── Bottom fade ── */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#07071a] to-transparent pointer-events-none" />
+    </section>
   )
 }
 
-// Helper function
 function getDaysUntilWeekend() {
-  const today = new Date()
-  const dayOfWeek = today.getDay()
-  if (dayOfWeek === 0 || dayOfWeek === 6) return 0
-  if (dayOfWeek === 5) return 1
-  return 6 - dayOfWeek
+  const day = new Date().getDay()
+  if (day === 0 || day === 6) return 0
+  if (day === 5) return 1
+  return 6 - day
 }
 
 export default Hero
